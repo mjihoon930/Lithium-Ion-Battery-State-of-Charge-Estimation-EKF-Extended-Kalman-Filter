@@ -205,23 +205,23 @@ KF.d_t = dt
 ## Simulate system with noisy measurements and call Kalman filter class
 # Preallocate for storage and store initial conditions
 
-xarray = np.zeros((3,N))
+xarray = np.zeros((3,N),dtype=object)
 xarray[:,0] = x0.flatten()
 yarray = np.zeros((1,N))
-xhatarray = np.zeros((3,N))
+xhatarray = np.zeros((3,N),dtype=object)
 xhatarray[:,0] = x0.flatten()
 yhatarray = np.zeros((1,N))
 
 Parray = np.zeros((3,N))
 Parray[:,0] = np.zeros((3,1)).flatten()
 
-x = np.zeros((3,N))
+x = np.zeros((3,N),dtype=object)
 y = np.zeros((1,N))
 
 x[:,0] = x0.flatten()
 y[:,0] = -1.031*math.exp(-35*x[0,0])+3.685+0.2156*x[0,0] - 0.1178*x[0,0]**2 + 0.3201*x[0,0]**3 - (0.1562*math.exp(-24.37*x[0,0])+0.07446)*U[0] - x[1,0] - x[2,0];
 
-x_true = np.zeros((3,N))
+x_true = np.zeros((3,N),dtype=object)
 y_true = np.zeros((1,N))
 
 x_true[:,0] = x0.flatten()
@@ -242,16 +242,16 @@ for i in range(1,N):
     w = sqrtm(Q) @ np.random.randn(3,1)
     
     
-    R_s = 0.3208*math.exp(-29.14*x[0,i-1])+0.04669;
-    C_s = -752.9*math.exp(-13.51*x[0,i-1])+703.6;
-    R_f = 6.603*math.exp(-155.2*x[0,i-1])+0.04984;
-    C_f = -6056*math.exp(-27.12*x[0,i-1])+4475;
+    R_s = 0.3208*np.exp(-29.14*x[0,i-1])+0.04669;
+    C_s = -752.9*np.exp(-13.51*x[0,i-1])+703.6;
+    R_f = 6.603*np.exp(-155.2*x[0,i-1])+0.04984;
+    C_f = -6056*np.exp(-27.12*x[0,i-1])+4475;
     
     x[0,i] = x[0,i-1] + dt*(-(1/(Rsd*Cb))*x[0,i-1] - (1/Cb)*U[i-1]) + w[0];
     x[1,i] = x[1,i-1] + dt*(-(1/(R_f*C_f))*x[1,i-1] + (1/C_f)*U[i-1]) + w[1];
     x[2,i] = x[2,i-1] + dt*(-(1/(R_s*C_s))*x[2,i-1] + (1/C_s)*U[i-1]) + w[2];
     
-    y[:,i] =  -1.031*math.exp(-35*x[0,i])+3.685 + 0.2156*x[0,i] - 0.1178*x[0,i]**2 + 0.3201*x[0,i]**3 - (0.1562*math.exp(-24.37*x[0,i])+0.07446)*U[i] - x[1,i] - x[2,i] + v;
+    y[:,i] =  -1.031*np.exp(-35*x[0,i])+3.685 + 0.2156*x[0,i] - 0.1178*x[0,i]**2 + 0.3201*x[0,i]**3 - (0.1562*np.exp(-24.37*x[0,i])+0.07446)*U[i] - x[1,i] - x[2,i] + v;
     
     x_true[0,i] = x_true[0,i-1] + dt*(-(1/(Rsd*Cb))*x_true[0,i-1] - (1/Cb)*U[i-1]) 
     x_true[1,i] = x_true[1,i-1] + dt*(-(1/(R_f*C_f))*x_true[1,i-1] + (1/C_f)*U[i-1])
@@ -259,7 +259,7 @@ for i in range(1,N):
     
     y_true[:,i] =  -1.031*math.exp(-35*x_true[0,i])+3.685 + 0.2156*x_true[0,i] - 0.1178*x_true[0,i]**2 + 0.3201*x_true[0,i]**3 - (0.1562*math.exp(-24.37*x_true[0,i])+0.07446)*U[i] - x_true[1,i] - x_true[2,i] 
     
-    xarray[:,i] = x[:,i].flatten()
+    xarray[:,i] = np.concatenate(x[:,i].flatten())
     yarray[:,i] = y[:,i].flatten()
     
     KF.Measurement = y[:,i]
@@ -273,9 +273,9 @@ for i in range(1,N):
     #Predict
     KF.predict(KF)
     
-    x_1 = float(KF.State[0])
-    x_2 = float(KF.State[1])
-    x_3 = float(KF.State[2])
+    x_1 = KF.State[0].item()
+    x_2 = KF.State[1].item()
+    x_3 = KF.State[2].item()
     
     dVbdx1 = (7217*math.exp(-35*x_1))/200 - (589*x_1)/2500 + (1903297*U[i]*math.exp(-(2437*x_1)/100))/500000 + (9603*x_1**2)/10000 + 539/2500;
     dVbdx2 = -1;
